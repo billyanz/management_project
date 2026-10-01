@@ -1,6 +1,10 @@
 <?php
-require_once 'includes/auth_check.php';
-require_once __DIR__ . '/../../config/database.php';
+
+require_once __DIR__ . '/../../includes/auth_check.php';
+
+if (file_exists(__DIR__ . '/../../config/database.php')) {
+    require_once __DIR__ . '/../../config/database.php';
+}
 
 // Auto-Generate Nomor Invoice (e.g. INV/CTC/2026/10/001)
 function bulanRomawi($bulan) {

@@ -1,5 +1,10 @@
 <?php
-require_once __DIR__ . '/../../config/database.php';
+
+require_once __DIR__ . '/../../includes/auth_check.php';
+
+if (file_exists(__DIR__ . '/../../config/database.php')) {
+    require_once __DIR__ . '/../../config/database.php';
+}
 
 // Handle Export Excel (Diproses sebelum output HTML)
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {

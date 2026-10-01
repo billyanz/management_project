@@ -1,7 +1,6 @@
 <?php
-
-require_once 'includes/auth_check.php';
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth_check.php';
+if (file_exists(__DIR__ . '/../../config/database.php')) { require_once __DIR__ . '/../../config/database.php'; }
 
 // Handle Hapus Proyek
 if (isset($_GET['delete'])) {
@@ -10,6 +9,11 @@ if (isset($_GET['delete'])) {
     $stmtDel->execute([$delete_id]);
     header("Location: index.php");
     exit;
+}
+
+require_once __DIR__ . '/../../includes/auth_check.php';
+if (file_exists(__DIR__ . '/../../config/database.php')) {
+    require_once __DIR__ . '/../../config/database.php';
 }
 
 require_once __DIR__ . '/../../includes/header.php';

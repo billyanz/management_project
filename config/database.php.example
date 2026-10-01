@@ -1,13 +1,23 @@
 <?php
-// Konfigurasi Koneksi Database
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "db_manajemen_projek";
+// File: config/database.php.example
+// Salin file ini menjadi 'config/database.php' lalu sesuaikan kredensialnya.
 
-$conn = new mysqli($host, $user, $pass, $db);
+$host = 'localhost';
+$db   = '';
+$user = 'root';
+$pass = ''; 
 
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+
+    // Dual support untuk variabel $conn (mysqli) jika diperlukan
+    $conn = new mysqli($host, $user, $pass, $db);
+
+} catch (\PDOException $e) {
+    die("Koneksi Database Gagal: " . $e->getMessage());
 }
 ?>

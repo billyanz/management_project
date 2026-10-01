@@ -1,5 +1,10 @@
 <?php
-require_once __DIR__ . '/../../config/database.php';
+
+require_once __DIR__ . '/../../includes/auth_check.php';
+
+if (file_exists(__DIR__ . '/../../config/database.php')) {
+    require_once __DIR__ . '/../../config/database.php';
+}
 
 $id = $_GET['id'] ?? null;
 if (!$id) {

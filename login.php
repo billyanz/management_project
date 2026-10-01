@@ -1,58 +1,61 @@
 <?php
 /**
  * File: login.php
+ * UI Login Modern Matching Emerald Theme PT. CTC
  */
 
-require_once 'includes/security.php';
-require_once 'config/database.php'; //
+require_once __DIR__ . '/includes/security.php';
+
+if (file_exists(__DIR__ . '/config/database.php')) {
+    require_once __DIR__ . '/config/database.php';
+} elseif (file_exists(__DIR__ . '/config/database.php.example')) {
+    require_once __DIR__ . '/config/database.php.example';
+}
+
+if (!isset($conn) || $conn === null) {
+    $host = "localhost"; $user = "root"; $pass = ""; $db = "db_manajemen_projek";
+    $conn = new mysqli($host, $user, $pass, $db);
+    if ($conn->connect_error) { die("Koneksi gagal: " . $conn->connect_error); }
+}
 
 if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
     header("Location: index.php");
     exit;
 }
 
-// Cek Rate Limiting Login (Max 5x salah, dikunci 5 menit)
 check_rate_limit('login', 5, 300);
 
 $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // 1. Cek Honeypot Trap
     check_honeypot('website_honeypot');
 
-    // 2. Verifikasi Token CSRF
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         die("Validasi keamanan gagal (CSRF Mismatch).");
     }
 
-    // 3. Sanitasi Input
-    $username_email = trim($_POST['username_email'] ?? '');
-    $password       = $_POST['password'] ?? '';
+    $email    = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if (empty($username_email) || empty($password)) {
-        $error_msg = "Username/Email dan Password wajib diisi!";
+    if (empty($email) || empty($password)) {
+        $error_msg = "Email dan Password wajib diisi!";
     } else {
-        // 4. Prepared Statement (Anti SQL Injection)
-        $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE username = ? OR email = ? LIMIT 1");
-        $stmt->bind_param("ss", $username_email, $username_email);
+        $stmt = $conn->prepare("SELECT id, nama, email, password, role FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
-            // 5. Verifikasi Hash Password
             if (password_verify($password, $user['password'])) {
-                
-                // Login Berhasil -> Reset Counter Percobaan
                 reset_rate_limit('login');
-
-                // Prevent Session Fixation
                 session_regenerate_id(true);
 
                 $_SESSION['is_logged_in'] = true;
                 $_SESSION['user_id']      = $user['id'];
-                $_SESSION['username']     = $user['username'];
+                $_SESSION['username']     = $user['nama'];
+                $_SESSION['nama']         = $user['nama'];
                 $_SESSION['user_role']    = $user['role'];
+                $_SESSION['role']         = $user['role'];
                 $_SESSION['user_agent']   = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
                 header("Location: index.php");
@@ -60,9 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Login Gagal -> Catat Percobaan
         register_failed_attempt('login', 5, 300);
-        $error_msg = "Kombinasi Username/Email dan Password salah!";
+        $error_msg = "Kombinasi Email dan Password salah!";
         $stmt->close();
     }
 }
@@ -74,55 +76,103 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Manajemen Projek</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
-        .login-box { max-width: 380px; margin: 80px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-submit { width: 100%; padding: 12px; background: #007bff; color: #fff; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-submit:hover { background: #0056b3; }
-        .alert-error { background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 14px; }
-        .hp-field { display: none !important; visibility: hidden !important; }
-        .reg-link { text-align: center; margin-top: 15px; font-size: 14px; }
-        .reg-link a { color: #007bff; text-decoration: none; }
-    </style>
+    <title>Login System - PT. Cipta Teknologi Cendekia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-<div class="login-box">
-    <h2 style="margin-top:0; text-align:center;">Login Sistem</h2>
-
-    <?php if (!empty($error_msg)): ?>
-        <div class="alert-error"><?= sanitize_out($error_msg); ?></div>
-    <?php endif; ?>
-
-    <form action="login.php" method="POST" autocomplete="off">
-        <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>">
-
-        <!-- Honeypot Trap -->
-        <div class="hp-field">
-            <input type="text" name="website_honeypot" id="website_honeypot" tabindex="-1" autocomplete="off">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+        <!-- Header Brand (Emerald Theme Matching Sidebar) -->
+        <div class="bg-emerald-950 p-8 text-center relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-800/30 rounded-full blur-2xl"></div>
+            
+            <div class="inline-flex items-center justify-center bg-emerald-500 w-16 h-16 rounded-2xl text-emerald-950 text-2xl font-bold mb-4 shadow-lg shadow-emerald-500/30">
+                <i class="fa-solid fa-building-user"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white tracking-wide">PT. CTC</h1>
+            <p class="text-emerald-300 text-xs font-light tracking-wider mt-1">Cipta Teknologi Cendekia</p>
         </div>
 
-        <div class="form-group">
-            <label for="username_email">Username / Email</label>
-            <input type="text" id="username_email" name="username_email" required autofocus>
+        <!-- Form Login Area -->
+        <div class="p-8">
+            <h2 class="text-xl font-bold text-slate-800 mb-1">Selamat Datang!</h2>
+            <p class="text-xs text-slate-500 mb-6">Silakan masuk menggunakan akun internal Anda.</p>
+
+            <?php if (!empty($error_msg)): ?>
+                <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs mb-5 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm"></i>
+                    <span><?= sanitize_out($error_msg); ?></span>
+                </div>
+            <?php endif; ?>
+
+            <form action="login.php" method="POST" autocomplete="off" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>">
+
+                <!-- Honeypot -->
+                <div style="display:none !important;">
+                    <input type="text" name="website_honeypot" tabindex="-1" autocomplete="off">
+                </div>
+
+                <!-- Input Email -->
+                <div>
+                    <label for="email" class="block text-xs font-semibold text-slate-700 mb-2">EMAIL *</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <input type="email" id="email" name="email" required autofocus
+                            placeholder="nama@projek.com"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition text-slate-800">
+                    </div>
+                </div>
+
+                <!-- Input Password -->
+                <div>
+                    <label for="password" class="block text-xs font-semibold text-slate-700 mb-2">PASSWORD *</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required
+                            placeholder="••••••••"
+                            class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition text-slate-800">
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                    class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm shadow-lg shadow-emerald-600/25 transition duration-200 flex items-center justify-center gap-2">
+                    <span>Masuk Ke Sistem</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <div class="mt-8 text-center border-t border-slate-100 pt-4">
+                <p class="text-[11px] text-slate-400">&copy; 2026 PT. Cipta Teknologi Cendekia. Internal System Only.</p>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-
-        <button type="submit" class="btn-submit">Masuk</button>
-    </form>
-
-    <div class="reg-link">
-        Belum punya akun? <a href="register.php">Daftar sekarang</a>
     </div>
-</div>
 
+    <script>
+    function togglePassword() {
+        const pass = document.getElementById("password");
+        const icon = document.getElementById("eyeIcon");
+        if (pass.type === "password") {
+            pass.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            pass.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+    </script>
 </body>
 </html>

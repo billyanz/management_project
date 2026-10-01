@@ -1,5 +1,11 @@
 <?php
-$baseUrl = "http://localhost/website%20manajemen%20projek";
+// Deteksi base URL secara dinamis dari root projek 
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+// Mengambil nama folder tempat projek berada secara otomatis
+$projectDir = explode('/', trim($_SERVER['SCRIPT_NAME'], '/'))[0]; 
+$baseUrl = "$protocol://$host/$projectDir";
+
 $currentScript = $_SERVER['SCRIPT_NAME'];
 ?>
 <aside class="w-64 bg-emerald-950 border-r border-emerald-900 p-5 flex flex-col justify-between hidden md:flex min-h-screen shrink-0 text-white shadow-xl">
@@ -51,11 +57,11 @@ $currentScript = $_SERVER['SCRIPT_NAME'];
     <div class="pt-4 border-t border-emerald-800/60">
         <div class="flex items-center gap-3 px-2 mb-3">
             <div class="w-9 h-9 rounded-xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-sm shadow-md">
-                <?= strtoupper(substr($_SESSION['nama'] ?? 'A', 0, 1)) ?>
+                <?= strtoupper(substr($_SESSION['username'] ?? ($_SESSION['nama'] ?? 'A'), 0, 1)) ?>
             </div>
             <div class="overflow-hidden">
-                <p class="text-sm font-semibold text-white truncate"><?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></p>
-                <p class="text-xs text-emerald-300 capitalize"><?= htmlspecialchars($_SESSION['role'] ?? 'Role') ?></p>
+                <p class="text-sm font-semibold text-white truncate"><?= htmlspecialchars($_SESSION['username'] ?? ($_SESSION['nama'] ?? 'User')) ?></p>
+                <p class="text-xs text-emerald-300 capitalize"><?= htmlspecialchars($_SESSION['user_role'] ?? ($_SESSION['role'] ?? 'Role')) ?></p>
             </div>
         </div>
         <a href="<?= $baseUrl ?>/logout.php" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-100 transition text-sm font-medium">
