@@ -1,0 +1,9 @@
+# Mengabaikan file sistem & editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Mengabaikan file sensitif / konfigurasi lokal (opsional)
+*.log
+config.local.php
