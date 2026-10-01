@@ -7,3 +7,5 @@ Thumbs.db
 # Mengabaikan file sensitif / konfigurasi lokal (opsional)
 *.log
 config.local.php
+config/database.php
+*.sql
