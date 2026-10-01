@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/auth_check.php';
 require_once __DIR__ . '/../../config/database.php';
 
 // Auto-Generate Nomor Invoice (e.g. INV/CTC/2026/10/001)
